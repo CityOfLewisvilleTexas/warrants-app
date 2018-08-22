@@ -1,0 +1,30 @@
+[v-cloak] { display: none; }
+* {
+	font-family: "Roboto", "Helvetica Neue", Helvetica, sans-serif;
+}
+
+nav .logo {
+	width: 36px;
+    display: inline-block;
+    height: 34px;
+    vertical-align: middle;
+    background-image: url(./assets/pmartin.svg);
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: center;
+    opacity: 1;
+    margin: 0 16px;
+}
+
+nav .title {
+	font-size: 1.5rem;
+}
+
+.spin {
+    animation: spin 2s infinite linear;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg) }
+    to { transform: rotate(360deg) }
+}

@@ -22,7 +22,7 @@ var app = new Vue({
             foldercontents: false,
             searchresults: false
         },
-        currentTab: 'views',
+        currentTab: 0,
         selectedView: '3 or More Warrants',
         folderCategories: [
             { text: 'My Folders', value: 'my' },

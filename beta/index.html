@@ -28,23 +28,23 @@
 <body>
     <div id="app">
         <v-app :dark="darkTheme" v-cloak class="blue-grey">
-            <v-navigation-drawer v-model="sideNav" permanent app dark :mini-variant.sync="$vuetify.breakpoint.mdAndDown || mini">
+            <v-navigation-drawer v-model="sideNav" permanent app dark v-if="!$vuetify.breakpoint.mdAndDown || mini">
                 <v-list class="pt-0" subheader>
                     <v-subheader>Warrants App</v-subheader>
                     <v-divider></v-divider>
-                    <v-list-tile v-for="tab in tabs" :key="tab.key" @click="currentTab=tab.key" :class="{ 'blue': tab.key == currentTab }">
-                            <v-list-tile-action>
-                                <v-icon slot="activator">{{ tab.icon }}</v-icon>
-                            </v-list-tile-action>
-                            <v-list-tile-content>
-                                <v-list-tile-title>{{ tab.name }}</v-list-tile-title>
-                            </v-list-tile-content>
+                    <v-list-tile v-for="(tab,idx) in tabs" :key="tab.key" @click="currentTab=idx" :class="{ 'blue': idx == currentTab }">
+                        <v-list-tile-action>
+                            <v-icon slot="activator">{{ tab.icon }}</v-icon>
+                        </v-list-tile-action>
+                        <v-list-tile-content>
+                            <v-list-tile-title>{{ tab.name }}</v-list-tile-title>
+                        </v-list-tile-content>
                     </v-list-tile>
                 </v-list>
             </v-navigation-drawer>
             <v-content class="blue-grey">
                 <!-- VIEWS -->
-                <v-container v-if="currentTab == 'views'">
+                <v-container v-if="tabs[currentTab].key == 'views'">
                     <v-layout wrap>
                         <v-flex xs12 md8 lg6 xl4 class="white--text">
                             Views: <v-select :disabled="isLoading.warrants" v-model="selectedView" :items="views" label="Views" solo></v-select>
@@ -84,7 +84,7 @@
                     </v-layout>
                 </v-container>
                 <!-- tab:FOLDERS -->
-                <v-container v-else-if="currentTab == 'folders'">
+                <v-container v-else-if="tabs[currentTab].key == 'folders'">
                     <v-layout>
                         <v-flex xs12 md8 lg6 xl4>
                             <v-select class="light-icon" prepend-icon="category" :disabled="isLoading.folders" v-model="selectedFolderCategory" :items="folderCategories" label="Categories" solo>
@@ -151,13 +151,13 @@
                     </v-layout>
                 </v-container>
                 <!-- tab:MAP -->
-                <v-container v-else-if="currentTab == 'map'">
+                <v-container v-else-if="tabs[currentTab].key == 'map'">
                     <v-card flat>
                         <v-card-text>MAP</v-card-text>
                     </v-card>
                 </v-container>
                 <!-- tab:SEARCH -->
-                <v-container v-else-if="currentTab == 'search'">
+                <v-container v-else-if="tabs[currentTab].key == 'search'">
                     <v-layout row wrap>
                         <v-flex xs12 sm5 md4 lg3 xl2 class="white--text">
                             Search by: <v-select :disabled="isLoading.searchresults" v-model="searchType" :items="searchTypes" label="Search by:" solo></v-select>
@@ -240,12 +240,18 @@
                     </v-layout>
                 </v-container>
                 <!-- tab:ASSIGNMENTS -->
-                <v-container v-else-if="currentTab == 'assignments'">
+                <v-container v-else-if="tabs[currentTab].key == 'assignments'">
                     <v-card flat>
                         <v-card-text>ASSIGNMENTS</v-card-text>
                     </v-card>
                 </v-container>
             </v-content>
+            <v-bottom-nav :active.sync="currentTab" color="grey darken-3" :value="true" v-if="$vuetify.breakpoint.mdAndDown" fixed shift>
+                <v-btn dark v-for="(tab, idx) in tabs" :key="tab.key">
+                    <span>{{ tab.name }}</span>
+                    <v-icon>{{ tab.icon }}</v-icon>
+                </v-btn>
+            </v-bottom-nav>
         </v-app>
     </div>
     <!-- source code -->

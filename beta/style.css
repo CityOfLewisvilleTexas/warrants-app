@@ -29,7 +29,6 @@ nav .title {
     to { transform: rotate(360deg) }
 }
 
-.v-toolbar * {
-    font-family: 'Product Sans';
-    letter-spacing: 1px;
+.light-icon i {
+    color: white !important;
 }

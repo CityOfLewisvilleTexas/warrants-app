@@ -11,6 +11,7 @@
     <!-- Vuetify -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
     <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Product+Sans:400,400i,700,700i" rel="stylesheet" type="text/css">
     <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- custom css -->
@@ -27,7 +28,7 @@
 <body>
     <div id="app">
         <v-app :dark="darkTheme" v-cloak>
-            <v-toolbar color="indigo" app dark tabs>
+            <v-toolbar color="indigo accent-2" app tabs flat dark>
                 <v-toolbar-side-icon @click="sideNav = !sideNav"></v-toolbar-side-icon>
                 <v-toolbar-title>Warrants</v-toolbar-title>
                 <v-spacer></v-spacer>
@@ -37,19 +38,21 @@
                 <v-btn icon>
                     <v-icon>more_vert</v-icon>
                 </v-btn>
-                <v-tabs slot="extension" v-model="currentTab" color="indigo">
-                    <v-tabs-slider color="pink"></v-tabs-slider>
+                <v-tabs slot="extension" v-model="currentTab" color="indigo accent-2" align-with-title>
+                    <v-tabs-slider color="yellow accent-2"></v-tabs-slider>
                     <v-tab v-for="tab in tabs" :key="tab.key">
-                        {{ tab.name }}
+                        <v-flex px-3>
+                            <v-icon>{{ tab.icon }}</v-icon>&nbsp;&nbsp;&nbsp;{{ tab.name }}
+                        </v-flex>
                     </v-tab>
                 </v-tabs>
             </v-toolbar>
             <v-navigation-drawer v-model="sideNav" app>
                 <v-list class="pa-1">
                     <v-list-tile avatar>
-                        <v-list-tile-avatar>
+                        <!-- <v-list-tile-avatar>
                             <img src="https://randomuser.me/api/portraits/men/85.jpg">
-                        </v-list-tile-avatar>
+                        </v-list-tile-avatar> -->
                         <v-list-tile-content>
                             <v-list-tile-title>{{ email }}</v-list-tile-title>
                         </v-list-tile-content>
@@ -85,7 +88,7 @@
                                         </v-flex>
                                     </v-layout>
                                 </v-flex>
-                                <v-flex xs12 v-else>
+                                <v-flex xs12 v-else color="blue-grey">
                                     <v-card>
                                         <v-card-title>
                                             <v-btn icon @click="fetchWarrants">
@@ -98,7 +101,7 @@
                                         <v-data-table :headers="viewHeaders" :items="warrants" :search="tableSearch.warrants" :rows-per-page-items="[10,25,50,{ text: 'All', value: -1 }]" :loading="isLoading.warrants">
                                             <v-progress-linear slot="progress" color="blue" indeterminate></v-progress-linear>
                                             <template slot="items" slot-scope="props">
-                                                <td v-for="(prop, i) in props.item">
+                                                <td v-for="(prop, i) in props.item" @click="test(props.item['DLREC#'])">
                                                     {{ prop }}
                                                 </td>
                                             </template>

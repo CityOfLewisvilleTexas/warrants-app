@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- info -->
+    <title>Warrants</title>
+    <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- IE fix -->
+    <link rel="shortcut icon" href="http://metrics.cityoflewisville.com/assets/pmartin_dark.png" />
+    <!-- Vuetify -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+    <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons' rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Product+Sans:400,400i,700,700i" rel="stylesheet" type="text/css">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- custom css -->
+    <link rel="stylesheet" src="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <!-- axios -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.3.5/bluebird.min.js"></script>
+    <!-- IE fix -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js"></script>
+    <!-- col security -->
+    <script src="http://apps.cityoflewisville.com/COLSecurity/col_security.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <v-app :dark="darkTheme" v-cloak class="blue-grey">
+            <v-navigation-drawer v-model="sideNav" permanent app dark :mini-variant.sync="$vuetify.breakpoint.mdAndDown || mini">
+                <v-list class="pt-0" subheader>
+                    <v-subheader>Warrants App</v-subheader>
+                    <v-divider></v-divider>
+                    <v-list-tile v-for="tab in tabs" :key="tab.key" @click="currentTab=tab.key" :class="{ 'blue': tab.key == currentTab }">
+                            <v-list-tile-action>
+                                <v-icon slot="activator">{{ tab.icon }}</v-icon>
+                            </v-list-tile-action>
+                            <v-list-tile-content>
+                                <v-list-tile-title>{{ tab.name }}</v-list-tile-title>
+                            </v-list-tile-content>
+                    </v-list-tile>
+                </v-list>
+            </v-navigation-drawer>
+            <v-content class="blue-grey">
+                <!-- VIEWS -->
+                <v-container v-if="currentTab == 'views'">
+                    <v-layout wrap>
+                        <v-flex xs12 md8 lg6 xl4 class="white--text">
+                            Views: <v-select :disabled="isLoading.warrants" v-model="selectedView" :items="views" label="Views" solo></v-select>
+                        </v-flex>
+                        <v-flex xs12 v-if="warrants.length==0 && !isLoading.warrants">
+                            <v-layout row>
+                                <v-flex xs12 md8 lg6 xl4>
+                                    <v-alert :value="true" type="error">
+                                        No results found.
+                                    </v-alert>
+                                </v-flex>
+                            </v-layout>
+                        </v-flex>
+                        <v-flex xs12 v-else color="blue-grey">
+                            <v-card>
+                                <v-card-title>
+                                    <v-btn icon @click="fetchWarrants">
+                                        <v-icon :class="{ spin: isLoading.warrants }">refresh</v-icon>
+                                    </v-btn>
+                                    <!-- Warrants -->
+                                    <v-spacer></v-spacer>
+                                    <v-text-field v-model="tableSearch.warrants" append-icon="search" label="Search" single-line hide-details></v-text-field>
+                                </v-card-title>
+                                <v-data-table :headers="viewHeaders" :items="warrants" :search="tableSearch.warrants" :rows-per-page-items="[10,25,50,{ text: 'All', value: -1 }]" :loading="isLoading.warrants">
+                                    <v-progress-linear slot="progress" color="blue" indeterminate></v-progress-linear>
+                                    <template slot="items" slot-scope="props">
+                                        <td v-for="(prop, i) in props.item" @click="test(props.item['DLREC#'])">
+                                            {{ prop }}
+                                        </td>
+                                    </template>
+                                    <v-alert slot="no-results" :value="true" color="error" icon="warning">
+                                        Your search for "{{ tableSearch.warrants }}" found no results.
+                                    </v-alert>
+                                </v-data-table>
+                            </v-card>
+                        </v-flex>
+                    </v-layout>
+                </v-container>
+                <!-- tab:FOLDERS -->
+                <v-container v-else-if="currentTab == 'folders'">
+                    <v-layout>
+                        <v-flex xs12 md8 lg6 xl4>
+                            <v-select class="light-icon" prepend-icon="category" :disabled="isLoading.folders" v-model="selectedFolderCategory" :items="folderCategories" label="Categories" solo>
+                            </v-select>
+                        </v-flex>
+                    </v-layout>
+                    <v-layout>
+                        <v-flex xs11 md8 lg6 xl4>
+                            <v-select class="light-icon" prepend-icon="folder" :disabled="isLoading.folders || displayFolders.length==0" v-model="selectedFolder" :items="displayFolders" label="Folders" solo>
+                            </v-select>
+                        </v-flex>
+                        <v-flex xs1 v-if="selectedFolderCategory != 'auto'">
+                            <v-dialog v-model="newFolderDialog" persistent max-width="290">
+                                <v-btn icon slot="activator" dark>
+                                    <v-icon>add</v-icon>
+                                </v-btn>
+                                <v-card>
+                                    <v-card-title class="headline">Create new folder?</v-card-title>
+                                    <v-card-text>
+                                        <v-layout row>
+                                            <v-flex xs12>
+                                                <v-text-field v-model="newFolderName" label="Folder Name" solo></v-text-field>
+                                            </v-flex>
+                                        </v-layout>
+                                    </v-card-text>
+                                    <v-card-actions>
+                                        <v-spacer></v-spacer>
+                                        <v-btn flat @click.native="newFolderDialog=false; newFolderName=''">Cancel</v-btn>
+                                        <v-btn color="green darken-1" dark @click.native="submitNewFolderName">Create</v-btn>
+                                    </v-card-actions>
+                                </v-card>
+                            </v-dialog>
+                        </v-flex>
+                    </v-layout>
+                    <v-layout>
+                        <v-flex xs12 md8 lg6 xl4 v-if="displayFolders.length==0">
+                            <v-alert :value="true" type="error">
+                                No folders for this category.
+                            </v-alert>
+                        </v-flex>
+                        <v-flex xs12 v-else>
+                            <v-card>
+                                <v-card-title>
+                                    <v-btn icon @click="fetchFolderContents">
+                                        <v-icon :class="{ spin: isLoading.foldercontents }">refresh</v-icon>
+                                    </v-btn>
+                                    <!-- Warrants -->
+                                    <v-spacer></v-spacer>
+                                    <v-text-field v-model="tableSearch.foldercontents" append-icon="search" label="Search" single-line hide-details></v-text-field>
+                                </v-card-title>
+                                <v-data-table :headers="folderContentsHeaders" :items="folderContents" :search="tableSearch.foldercontents" :rows-per-page-items="[10,25,50,{ text: 'All', value: -1 }]" :loading="isLoading.foldercontents">
+                                    <v-progress-linear slot="progress" color="blue" indeterminate></v-progress-linear>
+                                    <template slot="items" slot-scope="props">
+                                        <td v-for="(prop, i) in props.item">
+                                            {{ prop }}
+                                        </td>
+                                    </template>
+                                    <v-alert slot="no-results" :value="true" color="error" icon="warning">
+                                        Your search for "{{ tableSearch.foldercontents }}" found no results.
+                                    </v-alert>
+                                </v-data-table>
+                            </v-card>
+                        </v-flex>
+                    </v-layout>
+                </v-container>
+                <!-- tab:MAP -->
+                <v-container v-else-if="currentTab == 'map'">
+                    <v-card flat>
+                        <v-card-text>MAP</v-card-text>
+                    </v-card>
+                </v-container>
+                <!-- tab:SEARCH -->
+                <v-container v-else-if="currentTab == 'search'">
+                    <v-layout row wrap>
+                        <v-flex xs12 sm5 md4 lg3 xl2 class="white--text">
+                            Search by: <v-select :disabled="isLoading.searchresults" v-model="searchType" :items="searchTypes" label="Search by:" solo></v-select>
+                        </v-flex>
+                        <v-flex xs12 class="white--text" ml-3>
+                            <v-checkbox dark
+                                color="blue accent-1"
+                                label="Limit to active warrants only?"
+                                v-model="searchLimitToActive"
+                            ></v-checkbox>
+                        </v-flex>
+                    </v-layout>
+                    <v-layout row wrap>
+                        <v-flex xs12 lg8 xl6 v-if="searchType=='NAME'">
+                            <v-layout row wrap>
+                                <v-flex xs12 md6 lg6>
+                                    <v-text-field label="First Name" v-model="globalSearch.fname" v-on:keyup.enter="submitSearch(globalSearch.fname, globalSearch.lname)" solo></v-text-field>
+                                </v-flex>
+                                <v-flex xs12 md6 lg6>
+                                    <v-text-field label="Last Name" v-model="globalSearch.lname" v-on:keyup.enter="submitSearch(globalSearch.fname, globalSearch.lname)" solo></v-text-field>
+                                </v-flex>
+                            </v-layout>
+                        </v-flex>
+                        <v-flex xs12 lg8 xl6 v-else-if="searchType!='DATE OF BIRTH'">
+                            <v-text-field label="Search" v-model="globalSearch.search" v-on:keyup.enter="submitSearch(globalSearch.search)" solo></v-text-field>
+                        </v-flex>
+                        <v-flex xs12 lg8 xl6 v-else>
+                            <v-menu
+                                ref="dobMenu"
+                                :close-on-content-click="false"
+                                v-model="dobMenu"
+                                :nudge-right="40"
+                                lazy
+                                transition="scale-transition"
+                                offset-y
+                                full-width
+                                max-width="290px"
+                                min-width="290px">
+                                <v-text-field
+                                    slot="activator"
+                                    v-model="dobFormatted"
+                                    label="Date"
+                                    hint="MM-DD-YYYY format"
+                                    persistent-hint
+                                    @blur="dob = parseDate(dobFormatted)"
+                                    @keyup.enter="dobMenu=false; dob = parseDate(dobFormatted); submitSearch(dob)"
+                                    solo>
+                                </v-text-field>
+                                <v-date-picker v-model="dob" no-title @input="dobMenu = false"></v-date-picker>
+                            </v-menu>
+                        </v-flex>
+                        <v-flex xs12 v-if="globalSearch.error">
+                            <v-layout row>
+                                <v-flex xs12 lg8 xl6>
+                                    <v-alert :value="true" type="error">
+                                        No results found.
+                                    </v-alert>
+                                </v-flex>
+                            </v-layout>
+                        </v-flex>
+                        <v-flex xs12 v-else-if="globalSearch.runOnce==true">
+                            <v-card>
+                                <v-card-title>
+                                    <v-spacer></v-spacer>
+                                    <v-text-field v-model="tableSearch.searchresults" append-icon="search" label="Search" single-line hide-details></v-text-field>
+                                </v-card-title>
+                                <v-data-table :headers="searchResultsHeaders" :items="searchResults" :search="tableSearch.searchresults" :rows-per-page-items="[10,25,50,{ text: 'All', value: -1 }]" :loading="isLoading.searchresults">
+                                    <v-progress-linear slot="progress" color="blue" indeterminate></v-progress-linear>
+                                    <template slot="items" slot-scope="props">
+                                        <td v-for="(prop, i) in props.item">
+                                            {{ prop }}
+                                        </td>
+                                    </template>
+                                    <v-alert slot="no-results" :value="true" color="error" icon="warning">
+                                        Your search for "{{ tableSearch.searchResults }}" found no results.
+                                    </v-alert>
+                                </v-data-table>
+                            </v-card>
+                        </v-flex>
+                    </v-layout>
+                </v-container>
+                <!-- tab:ASSIGNMENTS -->
+                <v-container v-else-if="currentTab == 'assignments'">
+                    <v-card flat>
+                        <v-card-text>ASSIGNMENTS</v-card-text>
+                    </v-card>
+                </v-container>
+            </v-content>
+        </v-app>
+    </div>
+    <!-- source code -->
+    <script src="https://unpkg.com/vue/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+    <script type="text/javascript" src="./moment/moment.js"></script>
+    <script type="text/javascript" src="app.js"></script>
+</body>

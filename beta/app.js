@@ -11,6 +11,7 @@ var app = new Vue({
 
     // vars
     data: {
+        mini: false,
         email: localStorage.colEmail,
         sideNav: false,
         darkTheme: false,
@@ -21,7 +22,7 @@ var app = new Vue({
             foldercontents: false,
             searchresults: false
         },
-        currentTab: 0,
+        currentTab: 'views',
         selectedView: '3 or More Warrants',
         folderCategories: [
             { text: 'My Folders', value: 'my' },

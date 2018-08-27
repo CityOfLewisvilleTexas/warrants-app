@@ -148,7 +148,7 @@ var app = new Vue({
         fetchOfficerId: function() {
             if (this.isLoading.offid==true) return
             this.isLoading.offid = true
-            axios.post('http://ax1vnode1.cityoflewisville.com/v2/?webservice=Courts/Warrants/Get Officer Id', {
+            axios.post('https://ax1vnode1.cityoflewisville.com/v2/?webservice=Courts/Warrants/Get Officer Id', {
                 email: localStorage.colEmail,
                 auth_token: localStorage.colAuthToken
             })
@@ -171,7 +171,7 @@ var app = new Vue({
         fetchWarrants: function() {
             if (this.isLoading.warrants==true) return
             this.isLoading.warrants = true
-            axios.post('http://ax1vnode1.cityoflewisville.com/v2/?webservice=Courts/Warrants/Get View', {
+            axios.post('https://ax1vnode1.cityoflewisville.com/v2/?webservice=Courts/Warrants/Get View', {
                 VIEW_NAME: this.selectedView,
                 OFF_ID: this.offid,
                 auth_token: localStorage.colAuthToken
@@ -197,7 +197,7 @@ var app = new Vue({
         fetchFolders: function() {
             if (this.isLoading.folders==true) return
             this.isLoading.folders = true
-            axios.post('http://ax1vnode1.cityoflewisville.com/v2/?webservice=Courts/Warrants/Get Folders', {
+            axios.post('https://ax1vnode1.cityoflewisville.com/v2/?webservice=Courts/Warrants/Get Folders', {
                 OFF_ID: this.offid
             })
             .then(this.handleFolders)
@@ -218,7 +218,7 @@ var app = new Vue({
             }
             else {
                 this.isLoading.foldercontents = true
-                axios.post('http://ax1vnode1.cityoflewisville.com/v2/?webservice=Courts/Warrants/Get Folder Contents', {
+                axios.post('https://ax1vnode1.cityoflewisville.com/v2/?webservice=Courts/Warrants/Get Folder Contents', {
                     FOLDER_ID: this.selectedFolder
                 })
                 .then(this.handleFolderContents)
@@ -264,7 +264,7 @@ var app = new Vue({
                 PHONE_NUMBER: query1
             }
 
-            axios.post('http://ax1vnode1.cityoflewisville.com/v2/?webservice=Courts/Warrants/Search', options)
+            axios.post('https://ax1vnode1.cityoflewisville.com/v2/?webservice=Courts/Warrants/Search', options)
             .then(this.handleSearchResults)
         },
 

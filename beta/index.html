@@ -174,15 +174,33 @@
                         <v-flex xs12 lg8 xl6 v-if="searchType=='NAME'">
                             <v-layout row wrap>
                                 <v-flex xs12 md6 lg6>
-                                    <v-text-field label="First Name" v-model="globalSearch.fname" v-on:keyup.enter="submitSearch(globalSearch.fname, globalSearch.lname)" solo></v-text-field>
+                                    <v-text-field
+                                        label="First Name"
+                                        v-model="globalSearch.fname"
+                                        v-on:keyup.enter="submitSearch(globalSearch.fname, globalSearch.lname)"
+                                        :loading="isLoading.searchresults"
+                                        solo>
+                                    </v-text-field>
                                 </v-flex>
                                 <v-flex xs12 md6 lg6>
-                                    <v-text-field label="Last Name" v-model="globalSearch.lname" v-on:keyup.enter="submitSearch(globalSearch.fname, globalSearch.lname)" solo></v-text-field>
+                                    <v-text-field
+                                        label="Last Name"
+                                        v-model="globalSearch.lname"
+                                        v-on:keyup.enter="submitSearch(globalSearch.fname, globalSearch.lname)"
+                                        :loading="isLoading.searchresults"
+                                        solo>
+                                    </v-text-field>
                                 </v-flex>
                             </v-layout>
                         </v-flex>
                         <v-flex xs12 lg8 xl6 v-else-if="searchType!='DATE OF BIRTH'">
-                            <v-text-field label="Search" v-model="globalSearch.search" v-on:keyup.enter="submitSearch(globalSearch.search)" solo></v-text-field>
+                            <v-text-field
+                                label="Search"
+                                v-model="globalSearch.search"
+                                v-on:keyup.enter="submitSearch(globalSearch.search)"
+                                :loading="isLoading.searchresults"
+                                solo>
+                            </v-text-field>
                         </v-flex>
                         <v-flex xs12 lg8 xl6 v-else>
                             <v-menu
@@ -241,9 +259,30 @@
                 </v-container>
                 <!-- tab:ASSIGNMENTS -->
                 <v-container v-else-if="tabs[currentTab].key == 'assignments'">
-                    <v-card flat>
-                        <v-card-text>ASSIGNMENTS</v-card-text>
-                    </v-card>
+                    <h3 class="white--text headline">Assign Warrants</h3>
+                    <h4 class="white--text subheading">Unassigned warrants: {{ warrantsAssignment.numWarrants }}</h4>
+                    <v-layout row mt-5>
+                        <v-flex xs12 lg6>
+                            <v-slider
+                                v-model="warrantsAssignment.numWarrants"
+                                thumb-label="always"
+                                thumb-color="red"
+                                color="red"
+                                label="testing"
+                            ></v-slider>
+                        </v-flex>
+                    </v-layout>
+                    <v-layout row wrap>
+                        <v-flex xs12 v-for="(officer, idx) in warrantsAssignment.officers" :key="officer.OFF_ID">
+                            <v-checkbox dark
+                                color="blue accent-1"
+                                :label="officer.OFFICER_NAME + ' (' + assignedWarrants[idx].num + ')'"
+                                v-model="officer.selected"
+                                hide-details
+                            ></v-checkbox>
+                            <v-icon v-for="i in assignedWarrants[idx].num" :key="i">note</v-icon>
+                        </v-flex>
+                    </v-layout>
                 </v-container>
             </v-content>
             <v-bottom-nav :active.sync="currentTab" color="grey darken-3" :value="true" v-if="$vuetify.breakpoint.mdAndDown" fixed shift>

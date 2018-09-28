@@ -20,7 +20,8 @@ var app = new Vue({
             offid: false,
             folders: false,
             foldercontents: false,
-            searchresults: false
+            searchresults: false,
+            assignwarrants: false
         },
         currentTab: 0,
         selectedView: '3 or More Warrants',
@@ -70,7 +71,12 @@ var app = new Vue({
         dobFormatted: null,
         dobMenu: false,
         searchResults: [],
-        searchResultsHeaders: []
+        searchResultsHeaders: [],
+        warrantsAssignment: {
+            lastAssignment: '',
+            numWarrants: 0,
+            officers: []
+        }
     },
 
     computed: {
@@ -81,7 +87,7 @@ var app = new Vue({
                 { name: 'Map', key: 'map', icon: 'map' },
                 { name: 'Search', key: 'search', icon: 'search' }
             ]
-            if (this.admin==true) tabs.push({ name: 'Assignments', key: 'assignments', icon: 'assignment' })
+            /*if (this.admin==true)*/ tabs.push({ name: 'Assignments', key: 'assignments', icon: 'assignment' })
             return tabs
         },
         views: function() {
@@ -110,6 +116,28 @@ var app = new Vue({
                     value: folder.FOLDER_ID
                 }
             })
+        },
+        assignedWarrants: function() {
+            var assigned = this.warrantsAssignment.officers
+                .map(function(off) {
+                    return {
+                        selected: off.selected,
+                        num: 0
+                    }
+                })
+            if (this.warrantsAssignment.numWarrants > 0 && assigned.filter(function(off) { return off.selected}).length > 0 ) {
+                var l = this.warrantsAssignment.numWarrants
+                var assigning = 0
+                while(l > 0) {
+                    if (assigned[assigning].selected) {
+                        assigned[assigning].num++
+                        l--
+                    }
+                    assigning++
+                    if (assigning>assigned.length-1) assigning = 0
+                }
+            }
+            return assigned
         }
     },
 
@@ -134,6 +162,9 @@ var app = new Vue({
             this.globalSearch.search = ''
             this.globalSearch.fname = ''
             this.globalSearch.lname = ''
+        },
+        currentTab: function(tab) {
+            if (tab === 4) this.fetchAssignWarrantsInfo()
         }
     },
 
@@ -298,6 +329,22 @@ var app = new Vue({
             if (!date) return null
             var [month,day,year] = date.split('-')
             return year + '-' + month.toString().padStart(2, '0') + '-' + day.toString().padStart(2, '0')
+        },
+
+        fetchAssignWarrantsInfo: function() {
+            if (this.isLoading.assignwarrants===true) return
+            this.isLoading.assignwarrants = true
+            axios.post('https://ax1vnode1.cityoflewisville.com/v2/?webservice=Courts/Warrants/Get Initial Assign Warrants Info', {
+                start_date: '2017-03-01',
+                auth_token: localStorage.colAuthToken
+            }).then(function(res) {
+                this.warrantsAssignment.lastAssignment = res.data['Last Assignment'][0].ASSIGNMENT_DATE
+                this.warrantsAssignment.numWarrants = res.data['Number of Warrants'][0].NUMBER
+                this.warrantsAssignment.officers = res.data['Warrant Officers'].map(function(off) {
+                    off.selected = false
+                    return off
+                })
+            }.bind(this))
         }
     }
 })
